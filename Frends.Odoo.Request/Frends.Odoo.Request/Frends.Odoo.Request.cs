@@ -31,7 +31,7 @@ public static class Odoo
     {
         try
         {
-            var httpClient = new HttpClient();
+            using var httpClient = new HttpClient();
             var session = await AuthenticateAsync(httpClient, options);
             var odooResult = await CallAsync(httpClient, session, input, options);
             return new Result(true, null, odooResult);
@@ -60,7 +60,7 @@ public static class Odoo
             },
         };
 
-        var content = new StringContent(JsonConvert.SerializeObject(request), Encoding.UTF8, "application/json");
+        using var content = new StringContent(JsonConvert.SerializeObject(request), Encoding.UTF8, "application/json");
         var response = await httpClient.PostAsync($"{options.OdooUrl}/web/session/authenticate", content);
         response.EnsureSuccessStatusCode();
 
@@ -106,7 +106,7 @@ public static class Odoo
 
         var jsonRequest = JsonConvert.SerializeObject(request);
         Console.WriteLine(jsonRequest);
-        var content = new StringContent(jsonRequest, Encoding.UTF8, "application/json");
+        using var content = new StringContent(jsonRequest, Encoding.UTF8, "application/json");
         httpClient.DefaultRequestHeaders.Add("Cookie", $"session_id={session}");
         var response = await httpClient.PostAsync($"{options.OdooUrl}/web/dataset/call_kw", content);
         response.EnsureSuccessStatusCode();
