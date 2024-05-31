@@ -78,14 +78,16 @@ public static class Odoo
             throw new Exception("Authentication failed. Odoo's response: " + jsonResponse?.error?.data?.message);
         }
 
-        foreach (var cookie in cookies.Where(o => o.StartsWith("session_id")))
+        var sessionId = cookies.Where(o => o.StartsWith("session_id"))
+            .Select(o => o.Split(';')[0].Split('=')[1])
+            .FirstOrDefault();
+
+        if (sessionId == null)
         {
-            var parts = cookie.Split(';');
-            var sessionId = parts[0].Split('=')[1];
-            return sessionId;
+            throw new Exception("Authentication failed. Could not find session_id from the response.");
         }
 
-        throw new Exception("Authentication failed. Could not find session_id from the response.");
+        return sessionId;
     }
 
     private static async Task<dynamic> CallAsync(HttpClient httpClient, string session, Input input, Options options)
