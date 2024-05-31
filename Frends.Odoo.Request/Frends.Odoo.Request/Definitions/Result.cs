@@ -1,6 +1,6 @@
-﻿using Newtonsoft.Json.Linq;
+﻿namespace Frends.Odoo.Request.Definitions;
 
-namespace Frends.Odoo.Request.Definitions;
+using Newtonsoft.Json.Linq;
 
 /// <summary>
 /// Result class usually contains properties of the return object.

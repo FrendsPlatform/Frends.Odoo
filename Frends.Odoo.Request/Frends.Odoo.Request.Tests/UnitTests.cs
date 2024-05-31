@@ -71,9 +71,9 @@ internal class UnitTests
         }
 
         // Assert
+        Assert.IsNotNull(exception);
         Assert.AreEqual("Authentication failed. Odoo's response: Access Denied", exception.Message);
     }
-
 
     [Test]
     public async Task Request_InvalidRequest_Error()
@@ -109,7 +109,6 @@ internal class UnitTests
         Assert.IsNotNull(result.Data);
         Assert.AreEqual(5, result.Data.Count);
     }
-
 
     private Input GetDefaultInput()
     {

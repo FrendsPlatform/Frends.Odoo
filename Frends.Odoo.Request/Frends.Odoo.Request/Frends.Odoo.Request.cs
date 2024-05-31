@@ -1,12 +1,13 @@
-﻿using System;
+﻿using System.Linq;
+
+namespace Frends.Odoo.Request;
+
+using System;
 using System.Collections.Generic;
 using System.Net.Http;
 using System.Text;
 using System.Threading.Tasks;
 using Newtonsoft.Json;
-
-namespace Frends.Odoo.Request;
-
 using System.ComponentModel;
 using System.Threading;
 using Definitions;
@@ -64,7 +65,6 @@ public static class Odoo
         var response = await httpClient.PostAsync($"{options.OdooUrl}/web/session/authenticate", content);
         response.EnsureSuccessStatusCode();
 
-
         IEnumerable<string> cookies;
         try
         {
@@ -78,10 +78,8 @@ public static class Odoo
             throw new Exception("Authentication failed. Odoo's response: " + jsonResponse?.error?.data?.message);
         }
 
-        foreach (var cookie in cookies)
+        foreach (var cookie in cookies.Where(o => o.StartsWith("session_id")))
         {
-            // We are parsing the session_id from the cookies
-            if (!cookie.StartsWith("session_id")) continue;
             var parts = cookie.Split(';');
             var sessionId = parts[0].Split('=')[1];
             return sessionId;
