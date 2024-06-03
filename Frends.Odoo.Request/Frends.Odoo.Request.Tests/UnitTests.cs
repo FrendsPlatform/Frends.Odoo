@@ -1,20 +1,19 @@
-using System;
-using System.IO;
-using System.Threading.Tasks;
-using dotenv.net;
-
 namespace Frends.Odoo.Request.Tests;
 
-using Frends.Odoo.Request.Definitions;
+using System;
+using System.Threading;
+using System.Threading.Tasks;
+
+using Definitions;
 using NUnit.Framework;
 
 [TestFixture]
 internal class UnitTests
 {
-    private readonly string _odooUrl = Environment.GetEnvironmentVariable("ODOO_URL");
-    private readonly string _username = Environment.GetEnvironmentVariable("ODOO_USERNAME");
-    private readonly string _password = Environment.GetEnvironmentVariable("ODOO_PASSWORD");
-    private readonly string _database = Environment.GetEnvironmentVariable("ODOO_DATABASE");
+    private readonly string odooUrl = Environment.GetEnvironmentVariable("ODOO_URL");
+    private readonly string username = Environment.GetEnvironmentVariable("ODOO_USERNAME");
+    private readonly string password = Environment.GetEnvironmentVariable("ODOO_PASSWORD");
+    private readonly string database = Environment.GetEnvironmentVariable("ODOO_DATABASE");
 
     [Test]
     public async Task Request_InvalidCredentials_Error()
@@ -25,7 +24,7 @@ internal class UnitTests
         options.Password = "invalid";
 
         // Act
-        var result = await Odoo.Request(input, options, default);
+        var result = await Odoo.Request(input, options, CancellationToken.None);
 
         // Assert
         Assert.IsFalse(result.Success);
@@ -42,7 +41,7 @@ internal class UnitTests
         options.Database = "invalid";
 
         // Act
-        var result = await Odoo.Request(input, options, default);
+        var result = await Odoo.Request(input, options, CancellationToken.None);
 
         // Assert
         Assert.IsFalse(result.Success);
@@ -60,15 +59,8 @@ internal class UnitTests
         options.ThrowExceptionOnErrorResponse = true;
 
         // Act
-        Exception exception = null;
-        try
-        {
-            await Odoo.Request(input, options, default);
-        }
-        catch (Exception e)
-        {
-            exception = e;
-        }
+        var exception = Assert.ThrowsAsync<Exception>(
+            async () => await Odoo.Request(input, options, CancellationToken.None));
 
         // Assert
         Assert.IsNotNull(exception);
@@ -84,7 +76,7 @@ internal class UnitTests
         input.Kwargs = "{ 'fields': ['name', 'email'], 'limit': 5, 'invalid': 'invalid' }";
 
         // Act
-        var result = await Odoo.Request(input, options, default);
+        var result = await Odoo.Request(input, options, CancellationToken.None);
 
         // Assert
         Assert.IsFalse(result.Success);
@@ -101,7 +93,7 @@ internal class UnitTests
         var options = GetDefaultOptions();
 
         // Act
-        var result = await Odoo.Request(input, options, default);
+        var result = await Odoo.Request(input, options, CancellationToken.None);
 
         // Assert
         Assert.IsTrue(result.Success, result.Error);
@@ -110,26 +102,22 @@ internal class UnitTests
         Assert.AreEqual(5, result.Data.Count);
     }
 
-    private Input GetDefaultInput()
-    {
-        return new Input
+    private static Input GetDefaultInput() =>
+        new()
         {
             Model = "res.partner",
             Method = "search_read",
             Args = "[]",
             Kwargs = "{ 'fields': ['name', 'email'], 'limit': 5 }",
         };
-    }
 
-    private Options GetDefaultOptions()
-    {
-        return new Options
+    private Options GetDefaultOptions() =>
+        new()
         {
-            OdooUrl = _odooUrl,
-            Username = _username,
-            Password = _password,
-            Database = _database,
+            OdooUrl = odooUrl,
+            Username = username,
+            Password = password,
+            Database = database,
             ThrowExceptionOnErrorResponse = false,
         };
-    }
 }

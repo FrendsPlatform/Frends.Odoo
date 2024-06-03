@@ -1,6 +1,4 @@
-﻿using System.Linq;
-
-namespace Frends.Odoo.Request;
+﻿namespace Frends.Odoo.Request;
 
 using System;
 using System.Collections.Generic;
@@ -11,6 +9,7 @@ using Newtonsoft.Json;
 using System.ComponentModel;
 using System.Threading;
 using Definitions;
+using System.Linq;
 
 /// <summary>
 /// Main class of the Task.
@@ -18,7 +17,7 @@ using Definitions;
 public static class Odoo
 {
     /// <summary>
-    /// This is Task.
+    /// Frends Task for making requests to Odoo API.
     /// [Documentation](https://tasks.frends.com/tasks/frends-tasks/Frends.Odoo.Request).
     /// </summary>
     /// <param name="input">Task input.</param>
@@ -33,9 +32,9 @@ public static class Odoo
         try
         {
             using var httpClient = new HttpClient();
-            var session = await AuthenticateAsync(httpClient, options);
-            var odooResult = await CallAsync(httpClient, session, input, options);
-            return new Result(true, null, odooResult);
+            var session = await AuthenticateAsync(httpClient, options, cancellationToken);
+            var odooResult = await CallAsync(httpClient, session, input, options, cancellationToken);
+            return new Result { Success = true, Error = null, Data = odooResult };
         }
         catch (Exception e)
         {
@@ -44,11 +43,14 @@ public static class Odoo
                 throw;
             }
 
-            return new Result(false, e.Message + Environment.NewLine + e.StackTrace, null);
+            return new Result { Success = false, Error = e.Message + Environment.NewLine + e.StackTrace, Data = null };
         }
     }
 
-    private static async Task<string> AuthenticateAsync(HttpClient httpClient, Options options)
+    private static async Task<string> AuthenticateAsync(
+        HttpClient httpClient,
+        Options options,
+        CancellationToken cancellationToken)
     {
         var request = new
         {
@@ -62,7 +64,8 @@ public static class Odoo
         };
 
         using var content = new StringContent(JsonConvert.SerializeObject(request), Encoding.UTF8, "application/json");
-        var response = await httpClient.PostAsync($"{options.OdooUrl}/web/session/authenticate", content);
+        var response = await httpClient.PostAsync(
+            $"{options.OdooUrl}/web/session/authenticate", content, cancellationToken);
         response.EnsureSuccessStatusCode();
 
         IEnumerable<string> cookies;
@@ -73,7 +76,7 @@ public static class Odoo
         catch (InvalidOperationException)
         {
             // If the response does not contain the Set-Cookie header, we assume that the authentication failed.
-            var responseContent = await response.Content.ReadAsStringAsync();
+            var responseContent = await response.Content.ReadAsStringAsync(cancellationToken);
             dynamic jsonResponse = JsonConvert.DeserializeObject(responseContent);
             throw new Exception("Authentication failed. Odoo's response: " + jsonResponse?.error?.data?.message);
         }
@@ -90,7 +93,8 @@ public static class Odoo
         return sessionId;
     }
 
-    private static async Task<dynamic> CallAsync(HttpClient httpClient, string session, Input input, Options options)
+    private static async Task<dynamic> CallAsync(
+        HttpClient httpClient, string session, Input input, Options options, CancellationToken cancellationToken)
     {
         var request = new
         {
@@ -108,10 +112,10 @@ public static class Odoo
         Console.WriteLine(jsonRequest);
         using var content = new StringContent(jsonRequest, Encoding.UTF8, "application/json");
         httpClient.DefaultRequestHeaders.Add("Cookie", $"session_id={session}");
-        var response = await httpClient.PostAsync($"{options.OdooUrl}/web/dataset/call_kw", content);
+        var response = await httpClient.PostAsync($"{options.OdooUrl}/web/dataset/call_kw", content, cancellationToken);
         response.EnsureSuccessStatusCode();
 
-        var responseContent = await response.Content.ReadAsStringAsync();
+        var responseContent = await response.Content.ReadAsStringAsync(cancellationToken);
         dynamic jsonResponse = JsonConvert.DeserializeObject(responseContent);
 
         if (jsonResponse.error != null)
