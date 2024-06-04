@@ -50,7 +50,7 @@ internal class UnitTests
     }
 
     [Test]
-    public async Task Request_InvalidCredentials_ThrowsErrorAsException()
+    public void Request_InvalidCredentials_ThrowsErrorAsException()
     {
         // Arrange
         var input = GetDefaultInput();
