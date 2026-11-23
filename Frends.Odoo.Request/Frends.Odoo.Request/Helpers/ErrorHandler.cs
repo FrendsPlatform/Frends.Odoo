@@ -1,50 +1,42 @@
-using System;
+using System.Diagnostics.CodeAnalysis;
 using System.Runtime.ExceptionServices;
 using Frends.Odoo.Request.Definitions;
 
 namespace Frends.Odoo.Request.Helpers;
 
-/// <summary>
-/// Converts task exceptions into failed results or throws them according to task options.
-/// </summary>
+[ExcludeFromCodeCoverage(Justification = "Untouched version already tested in template solution.")]
 internal static class ErrorHandler
 {
     /// <summary>
-    /// Handles an exception using the configured task options.
+    /// Converts an exception into a failed Result object or rethrows based on task options.
     /// </summary>
     /// <param name="exception">The exception to handle.</param>
-    /// <param name="options">The task options.</param>
-    /// <param name="throwCanceled">Whether to rethrow cancellation exceptions.</param>
-    /// <returns>A failed result when the exception is handled instead of thrown.</returns>
+    /// <param name="options"> Task options that control whether failures are returned as a Result object or thrown. </param>
+    /// <param name="throwCanceled">
+    /// When true, an OperationCanceledException is rethrown immediately.
+    /// When false, cancellation is handled like any other failure.
+    /// </param>
+    /// <returns> A failed Result object when the exception is handled instead of rethrown. </returns>
     internal static Result Handle(this Exception exception, Options options, bool throwCanceled = true)
     {
         ArgumentNullException.ThrowIfNull(exception);
         ArgumentNullException.ThrowIfNull(options);
 
         ThrowIfCanceled(exception, throwCanceled);
-
-        if (options.ThrowErrorOnFailure)
-        {
-            ThrowBaseException(exception, options.ErrorMessageOnFailure);
-        }
+        if (options.ThrowErrorOnFailure) ThrowBaseException(exception, options.ErrorMessageOnFailure);
 
         return ReturnResult(exception, options.ErrorMessageOnFailure);
     }
 
     private static void ThrowIfCanceled(Exception exception, bool throwCanceled = true)
     {
-        if (throwCanceled && exception is OperationCanceledException)
-        {
-            ThrowBaseException(exception);
-        }
+        if (throwCanceled && exception is OperationCanceledException) ThrowBaseException(exception);
     }
 
     private static void ThrowBaseException(Exception exception, string customMessage = null)
     {
         if (string.IsNullOrEmpty(customMessage))
-        {
             ExceptionDispatchInfo.Capture(exception).Throw();
-        }
 
         throw new Exception(customMessage, exception);
     }
@@ -58,8 +50,11 @@ internal static class ErrorHandler
         return new Result
         {
             Success = false,
-            Error = errorMessage,
-            Data = null,
+            Error = new Error
+            {
+                Message = errorMessage,
+                AdditionalInfo = exception,
+            },
         };
     }
 }
