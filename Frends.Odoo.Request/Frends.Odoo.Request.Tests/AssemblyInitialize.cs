@@ -1,10 +1,16 @@
-﻿using System.IO;
+using System.IO;
 using dotenv.net;
 using NUnit.Framework;
 
+/// <summary>
+/// Initializes environment variables for test runs.
+/// </summary>
 [SetUpFixture]
 public class AssemblyInitialize
 {
+    /// <summary>
+    /// Loads environment variables before the tests run.
+    /// </summary>
     [OneTimeSetUp]
     public void OneTimeSetUp()
     {

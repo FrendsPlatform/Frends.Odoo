@@ -1,4 +1,4 @@
-﻿namespace Frends.Odoo.Request.Definitions;
+namespace Frends.Odoo.Request.Definitions;
 
 using System.ComponentModel;
 using System.ComponentModel.DataAnnotations;
@@ -38,10 +38,17 @@ public class Options
     public string Database { get; set; }
 
     /// <summary>
-    /// If true, the task throws an exception if the response from Odoo contains an error.
-    /// If false, the task returns the error message in the result.
+    /// Whether to throw an error when the task fails.
     /// </summary>
-    /// <example>Example of the parameter value</example>
-    [DefaultValue(false)]
-    public bool ThrowExceptionOnErrorResponse { get; set; }
+    /// <example>true</example>
+    [DefaultValue(true)]
+    public bool ThrowErrorOnFailure { get; set; } = true;
+
+    /// <summary>
+    /// Overrides the error message when the task fails.
+    /// </summary>
+    /// <example>Odoo request failed</example>
+    [DisplayFormat(DataFormatString = "Text")]
+    [DefaultValue("")]
+    public string ErrorMessageOnFailure { get; set; } = string.Empty;
 }

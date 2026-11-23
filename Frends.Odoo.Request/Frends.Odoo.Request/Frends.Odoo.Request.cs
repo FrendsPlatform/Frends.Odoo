@@ -1,15 +1,16 @@
-﻿namespace Frends.Odoo.Request;
-
 using System;
 using System.Collections.Generic;
+using System.ComponentModel;
+using System.Linq;
 using System.Net.Http;
 using System.Text;
-using System.Threading.Tasks;
-using Newtonsoft.Json;
-using System.ComponentModel;
 using System.Threading;
-using Definitions;
-using System.Linq;
+using System.Threading.Tasks;
+using Frends.Odoo.Request.Definitions;
+using Frends.Odoo.Request.Helpers;
+using Newtonsoft.Json;
+
+namespace Frends.Odoo.Request;
 
 /// <summary>
 /// Main class of the Task.
@@ -23,7 +24,7 @@ public static class Odoo
     /// <param name="input">Task input.</param>
     /// <param name="options">Task options.</param>
     /// <param name="cancellationToken">Cancellation token given by Frends.</param>
-    /// <returns>Object { bool Success, string Error, dynamic Data }.</returns>
+    /// <returns>object { bool Success, dynamic Data, object Error { string Message, Exception AdditionalInfo } }.</returns>
     public static async Task<Result> Request(
         [PropertyTab] Input input,
         [PropertyTab] Options options,
@@ -34,16 +35,11 @@ public static class Odoo
             using var httpClient = new HttpClient();
             var session = await AuthenticateAsync(httpClient, options, cancellationToken);
             var odooResult = await CallAsync(httpClient, session, input, options, cancellationToken);
-            return new Result { Success = true, Error = null, Data = odooResult };
+            return new Result(success: true, data: odooResult);
         }
-        catch (Exception e)
+        catch (Exception ex)
         {
-            if (options.ThrowExceptionOnErrorResponse)
-            {
-                throw;
-            }
-
-            return new Result { Success = false, Error = e.Message + Environment.NewLine + e.StackTrace, Data = null };
+            return ex.Handle(options);
         }
     }
 
@@ -68,14 +64,8 @@ public static class Odoo
             $"{options.OdooUrl}/web/session/authenticate", content, cancellationToken);
         response.EnsureSuccessStatusCode();
 
-        IEnumerable<string> cookies;
-        try
+        if (!response.Headers.TryGetValues("Set-Cookie", out IEnumerable<string> cookies))
         {
-            cookies = response.Headers.GetValues("Set-Cookie");
-        }
-        catch (InvalidOperationException)
-        {
-            // If the response does not contain the Set-Cookie header, we assume that the authentication failed.
             var responseContent = await response.Content.ReadAsStringAsync(cancellationToken);
             dynamic jsonResponse = JsonConvert.DeserializeObject(responseContent);
             throw new Exception("Authentication failed. Odoo's response: " + jsonResponse?.error?.data?.message);

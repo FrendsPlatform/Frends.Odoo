@@ -4,7 +4,7 @@ using System;
 using System.Threading;
 using System.Threading.Tasks;
 
-using Definitions;
+using Frends.Odoo.Request.Definitions;
 using NUnit.Framework;
 
 [TestFixture]
@@ -15,6 +15,9 @@ internal class UnitTests
     private readonly string password = Environment.GetEnvironmentVariable("ODOO_PASSWORD");
     private readonly string database = Environment.GetEnvironmentVariable("ODOO_DATABASE");
 
+    /// <summary>
+    /// Confirms invalid credentials are returned as an error result.
+    /// </summary>
     [Test]
     public async Task Request_InvalidCredentials_Error()
     {
@@ -28,10 +31,13 @@ internal class UnitTests
 
         // Assert
         Assert.IsFalse(result.Success);
-        Assert.IsTrue(result.Error.StartsWith("Authentication failed. Odoo's response: Access Denied"), result.Error);
+        Assert.IsTrue(result.Error.Message.StartsWith("Authentication failed. Odoo's response: Access Denied"), result.Error.Message);
         Assert.IsNull(result.Data);
     }
 
+    /// <summary>
+    /// Confirms an invalid database is returned as an error result.
+    /// </summary>
     [Test]
     public async Task Request_InvalidDatabase_Error()
     {
@@ -45,10 +51,13 @@ internal class UnitTests
 
         // Assert
         Assert.IsFalse(result.Success);
-        Assert.IsTrue(result.Error.Contains("database \"invalid\" does not exist"), result.Error);
+        Assert.IsTrue(result.Error.Message.Contains("database \"invalid\" does not exist"), result.Error.Message);
         Assert.IsNull(result.Data);
     }
 
+    /// <summary>
+    /// Confirms failures can be configured to throw exceptions.
+    /// </summary>
     [Test]
     public void Request_InvalidCredentials_ThrowsErrorAsException()
     {
@@ -56,7 +65,7 @@ internal class UnitTests
         var input = GetDefaultInput();
         var options = GetDefaultOptions();
         options.Password = "invalid";
-        options.ThrowExceptionOnErrorResponse = true;
+        options.ThrowErrorOnFailure = true;
 
         // Act
         var exception = Assert.ThrowsAsync<Exception>(
@@ -67,6 +76,9 @@ internal class UnitTests
         Assert.AreEqual("Authentication failed. Odoo's response: Access Denied", exception.Message);
     }
 
+    /// <summary>
+    /// Confirms invalid request arguments are returned as an error result.
+    /// </summary>
     [Test]
     public async Task Request_InvalidRequest_Error()
     {
@@ -81,10 +93,31 @@ internal class UnitTests
         // Assert
         Assert.IsFalse(result.Success);
         Assert.IsNotNull(result.Error);
-        Assert.IsTrue(result.Error.Contains("builtins.TypeError"), result.Error);
+        Assert.IsTrue(result.Error.Message.Contains("builtins.TypeError"), result.Error.Message);
         Assert.IsNull(result.Data);
     }
 
+    /// <summary>
+    /// Confirms error results include additional information and the custom message.
+    /// </summary>
+    [Test]
+    public async Task Request_InvalidUrl_ErrorHasAdditionalInfoAndCustomMessage()
+    {
+        var input = GetDefaultInput();
+        var options = GetDefaultOptions();
+        options.OdooUrl = "invalid-url";
+        options.ErrorMessageOnFailure = "Unable to contact Odoo";
+
+        var result = await Odoo.Request(input, options, CancellationToken.None);
+
+        Assert.IsFalse(result.Success);
+        Assert.IsTrue(result.Error.Message.StartsWith("Unable to contact Odoo:"), result.Error.Message);
+        Assert.IsNotNull(result.Error.AdditionalInfo);
+    }
+
+    /// <summary>
+    /// Confirms a valid request returns data successfully.
+    /// </summary>
     [Test]
     public async Task Request_CorrectRequest_Success()
     {
@@ -96,7 +129,7 @@ internal class UnitTests
         var result = await Odoo.Request(input, options, CancellationToken.None);
 
         // Assert
-        Assert.IsTrue(result.Success, result.Error);
+        Assert.IsTrue(result.Success, result.Error?.Message);
         Assert.IsNull(result.Error);
         Assert.IsNotNull(result.Data);
         Assert.AreEqual(5, result.Data.Count);
@@ -118,6 +151,6 @@ internal class UnitTests
             Username = username,
             Password = password,
             Database = database,
-            ThrowExceptionOnErrorResponse = false,
+            ThrowErrorOnFailure = false,
         };
 }

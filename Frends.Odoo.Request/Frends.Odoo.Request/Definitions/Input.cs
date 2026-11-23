@@ -1,10 +1,10 @@
-﻿namespace Frends.Odoo.Request.Definitions;
+namespace Frends.Odoo.Request.Definitions;
 
 using System.ComponentModel;
 using System.ComponentModel.DataAnnotations;
 
 /// <summary>
-/// Input class contains parameters that are required.
+/// Input class contains parameters required to make an Odoo request.
 /// </summary>
 public class Input
 {

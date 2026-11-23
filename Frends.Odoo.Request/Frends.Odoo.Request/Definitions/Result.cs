@@ -1,4 +1,4 @@
-﻿namespace Frends.Odoo.Request.Definitions;
+namespace Frends.Odoo.Request.Definitions;
 
 /// <summary>
 /// Result class usually contains properties of the return object.
@@ -6,23 +6,34 @@
 public class Result
 {
     /// <summary>
-    /// True if the operation was successful. False if the operation failed.
-    /// If optional parameter ThrowExceptionOnErrorResponse is set to true, the task throws an exception if the
-    /// response from Odoo contains an error.
+    /// Initializes a new instance of the <see cref="Result"/> class.
     /// </summary>
-    /// <example>true</example>
-    public bool Success { get; init; }
+    /// <param name="success">Whether the operation was successful.</param>
+    /// <param name="data">Data returned by the operation.</param>
+    /// <param name="error">Error details when the operation failed.</param>
+    public Result(bool success, dynamic data = null, Error error = null)
+    {
+        this.Success = success;
+        this.Data = data;
+        this.Error = error;
+    }
 
     /// <summary>
-    /// Error message if the operation failed.
+    /// True if the operation was successful. False if the operation failed.
     /// </summary>
-    /// <example>Error message</example>
-    public string Error { get; init; }
+    /// <example>true</example>
+    public bool Success { get; }
+
+    /// <summary>
+    /// Error details if the operation failed.
+    /// </summary>
+    /// <example>object { string Message, Exception AdditionalInfo }</example>
+    public Error Error { get; }
 
     /// <summary>
     /// Data returned by the operation in JToken format.
     /// You can use dot notation to access the field values.
     /// </summary>
     /// <example>[ { "field1": "value1" }, { "field1": "value2" } ]</example>
-    public dynamic Data { get; init; }
+    public dynamic Data { get; }
 }
