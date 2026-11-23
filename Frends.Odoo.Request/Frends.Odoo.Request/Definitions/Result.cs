@@ -1,4 +1,4 @@
-﻿namespace Frends.Odoo.Request.Definitions;
+namespace Frends.Odoo.Request.Definitions;
 
 /// <summary>
 /// Result class usually contains properties of the return object.
@@ -6,23 +6,21 @@
 public class Result
 {
     /// <summary>
-    /// True if the operation was successful. False if the operation failed.
-    /// If optional parameter ThrowExceptionOnErrorResponse is set to true, the task throws an exception if the
-    /// response from Odoo contains an error.
+    /// Gets or initializes a value indicating whether the operation was successful.
     /// </summary>
     /// <example>true</example>
     public bool Success { get; init; }
 
     /// <summary>
-    /// Error message if the operation failed.
+    /// Gets or initializes the error message if the operation failed.
     /// </summary>
-    /// <example>Error message</example>
+    /// <example>Authentication failed: Access Denied</example>
     public string Error { get; init; }
 
     /// <summary>
-    /// Data returned by the operation in JToken format.
-    /// You can use dot notation to access the field values.
+    /// Gets or initializes the data returned by the operation in JToken format.
+    /// Dot notation can be used to access field values.
     /// </summary>
-    /// <example>[ { "field1": "value1" }, { "field1": "value2" } ]</example>
+    /// <example>[{ "id": 7, "name": "Azure Interior", "email": "info@azureinterior.com" }]</example>
     public dynamic Data { get; init; }
 }

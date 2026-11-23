@@ -1,15 +1,16 @@
-﻿namespace Frends.Odoo.Request;
-
 using System;
 using System.Collections.Generic;
+using System.ComponentModel;
+using System.Linq;
 using System.Net.Http;
 using System.Text;
-using System.Threading.Tasks;
-using Newtonsoft.Json;
-using System.ComponentModel;
 using System.Threading;
-using Definitions;
-using System.Linq;
+using System.Threading.Tasks;
+using Frends.Odoo.Request.Definitions;
+using Frends.Odoo.Request.Helpers;
+using Newtonsoft.Json;
+
+namespace Frends.Odoo.Request;
 
 /// <summary>
 /// Main class of the Task.
@@ -23,7 +24,7 @@ public static class Odoo
     /// <param name="input">Task input.</param>
     /// <param name="options">Task options.</param>
     /// <param name="cancellationToken">Cancellation token given by Frends.</param>
-    /// <returns>Object { bool Success, string Error, dynamic Data }.</returns>
+    /// <returns>object { bool Success, string Error, dynamic Data }.</returns>
     public static async Task<Result> Request(
         [PropertyTab] Input input,
         [PropertyTab] Options options,
@@ -36,14 +37,9 @@ public static class Odoo
             var odooResult = await CallAsync(httpClient, session, input, options, cancellationToken);
             return new Result { Success = true, Error = null, Data = odooResult };
         }
-        catch (Exception e)
+        catch (Exception exception)
         {
-            if (options.ThrowExceptionOnErrorResponse)
-            {
-                throw;
-            }
-
-            return new Result { Success = false, Error = e.Message + Environment.NewLine + e.StackTrace, Data = null };
+            return exception.Handle(options);
         }
     }
 

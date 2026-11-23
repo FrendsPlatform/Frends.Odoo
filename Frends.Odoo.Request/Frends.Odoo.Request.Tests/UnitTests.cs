@@ -1,11 +1,10 @@
-namespace Frends.Odoo.Request.Tests;
-
 using System;
 using System.Threading;
 using System.Threading.Tasks;
-
-using Definitions;
+using Frends.Odoo.Request.Definitions;
 using NUnit.Framework;
+
+namespace Frends.Odoo.Request.Tests;
 
 [TestFixture]
 internal class UnitTests
@@ -14,6 +13,21 @@ internal class UnitTests
     private readonly string username = Environment.GetEnvironmentVariable("ODOO_USERNAME");
     private readonly string password = Environment.GetEnvironmentVariable("ODOO_PASSWORD");
     private readonly string database = Environment.GetEnvironmentVariable("ODOO_DATABASE");
+
+    [Test]
+    public void Options_ThrowExceptionOnErrorResponse_ControlsThrowErrorOnFailure()
+    {
+        var options = new Options();
+
+        Assert.IsTrue(options.ThrowErrorOnFailure);
+        Assert.IsTrue(options.ThrowExceptionOnErrorResponse);
+        options.ThrowExceptionOnErrorResponse = false;
+        Assert.IsFalse(options.ThrowErrorOnFailure);
+        options.ThrowExceptionOnErrorResponse = true;
+        Assert.IsTrue(options.ThrowErrorOnFailure);
+        options.ThrowErrorOnFailure = false;
+        Assert.IsFalse(options.ThrowExceptionOnErrorResponse);
+    }
 
     [Test]
     public async Task Request_InvalidCredentials_Error()
