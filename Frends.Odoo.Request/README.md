@@ -2,7 +2,7 @@
 Frends Task for making requests to Odoo API.
 
 [![License: MIT](https://img.shields.io/badge/License-MIT-green.svg)](https://opensource.org/licenses/MIT)
-[![Build](https://github.com/FrendsPlatform/Frends.Odoo/actions/workflows/Request_build_and_test_on_main.yml/badge.svg)](https://github.com/FrendsPlatform/Frends.Odoo/actions)
+[![Build](https://github.com/FrendsPlatform/Frends.Odoo/actions/workflows/Request_main_release.yml/badge.svg)](https://github.com/FrendsPlatform/Frends.Odoo/actions)
 ![Coverage](https://app-github-custom-badges.azurewebsites.net/Badge?key=FrendsPlatform/Frends.Odoo/Frends.Odoo.Request|main)
 
 ## Installing
