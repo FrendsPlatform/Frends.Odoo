@@ -14,15 +14,15 @@ public class Result
     public bool Success { get; init; }
 
     /// <summary>
-    /// Error that occurred during task execution.
-    /// </summary>
-    /// <example>object { string Message, Exception AdditionalInfo }</example>
-    public Error Error { get; init; }
-
-    /// <summary>
     /// Data returned by the operation in JToken format.
     /// You can use dot notation to access the field values.
     /// </summary>
     /// <example>[{ "id": 7, "name": "Azure Interior", "email": "info@azureinterior.com" }]</example>
     public dynamic Data { get; init; }
+
+    /// <summary>
+    /// Error that occurred during task execution.
+    /// </summary>
+    /// <example>object { string Message, Exception AdditionalInfo }</example>
+    public Error Error { get; init; }
 }

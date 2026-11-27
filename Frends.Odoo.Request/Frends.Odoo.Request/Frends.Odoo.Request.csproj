@@ -21,13 +21,14 @@
     <None Include="FrendsTaskMetadata.json" Pack="true" PackagePath="/">
       <CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>
     </None>
+      <Content Include="migration.json" PackagePath="/" Pack="true"/>
     <AdditionalFiles Include="FrendsTaskMetadata.json" />
   </ItemGroup>
 
   <ItemGroup>
     <PackageReference Include="Newtonsoft.Json" Version="13.0.4" />
   </ItemGroup>
-  
+
   <ItemGroup>
     <PackageReference Include="StyleCop.Analyzers" Version="1.3.180">
       <PrivateAssets>all</PrivateAssets>

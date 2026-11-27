@@ -1,0 +1,38 @@
+[
+  {
+    "Task": "Frends.Odoo.Request",
+    "Migrations": [
+      {
+        "Version": "2.0.0",
+        "Description": "Moved Odoo connection parameters from Options to Connection, renamed ThrowExceptionOnErrorResponse to ThrowErrorOnFailure, and changed Result.Error from a string to an Error object.",
+        "Migration": [
+          {
+            "Type": "Copy",
+            "Source": "Options.OdooUrl",
+            "Target": "Connection.OdooUrl"
+          },
+          {
+            "Type": "Copy",
+            "Source": "Options.Username",
+            "Target": "Connection.Username"
+          },
+          {
+            "Type": "Copy",
+            "Source": "Options.Password",
+            "Target": "Connection.Password"
+          },
+          {
+            "Type": "Copy",
+            "Source": "Options.Database",
+            "Target": "Connection.Database"
+          },
+          {
+            "Type": "Copy",
+            "Source": "Options.ThrowExceptionOnErrorResponse",
+            "Target": "Options.ThrowErrorOnFailure"
+          }
+        ]
+      }
+    ]
+  }
+]
