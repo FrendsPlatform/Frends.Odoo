@@ -1,35 +1,30 @@
-namespace Frends.Odoo.Request.Tests;
-
 using System;
 using System.Threading;
 using System.Threading.Tasks;
-
-using Definitions;
+using Frends.Odoo.Request.Definitions;
 using NUnit.Framework;
+
+namespace Frends.Odoo.Request.Tests;
 
 [TestFixture]
 internal class UnitTests
 {
-    private readonly string odooUrl = Environment.GetEnvironmentVariable("ODOO_URL");
-    private readonly string username = Environment.GetEnvironmentVariable("ODOO_USERNAME");
-    private readonly string password = Environment.GetEnvironmentVariable("ODOO_PASSWORD");
-    private readonly string database = Environment.GetEnvironmentVariable("ODOO_DATABASE");
-
     [Test]
     public async Task Request_InvalidCredentials_Error()
     {
         // Arrange
         var input = GetDefaultInput();
+        var connection = GetDefaultConnection();
         var options = GetDefaultOptions();
-        options.Password = "invalid";
+        connection.Password = "invalid";
 
         // Act
-        var result = await Odoo.Request(input, options, CancellationToken.None);
+        var result = await Odoo.Request(input, connection, options, CancellationToken.None);
 
         // Assert
-        Assert.IsFalse(result.Success);
-        Assert.IsTrue(result.Error.StartsWith("Authentication failed. Odoo's response: Access Denied"), result.Error);
-        Assert.IsNull(result.Data);
+        Assert.That(result.Success, Is.False);
+        Assert.That(result.Error.Message, Does.StartWith("Authentication failed. Odoo's response: Access Denied"));
+        Assert.That((object)result.Data, Is.Null);
     }
 
     [Test]
@@ -37,34 +32,36 @@ internal class UnitTests
     {
         // Arrange
         var input = GetDefaultInput();
+        var connection = GetDefaultConnection();
         var options = GetDefaultOptions();
-        options.Database = "invalid";
+        connection.Database = "invalid";
 
         // Act
-        var result = await Odoo.Request(input, options, CancellationToken.None);
+        var result = await Odoo.Request(input, connection, options, CancellationToken.None);
 
         // Assert
-        Assert.IsFalse(result.Success);
-        Assert.IsTrue(result.Error.Contains("database \"invalid\" does not exist"), result.Error);
-        Assert.IsNull(result.Data);
+        Assert.That(result.Success, Is.False);
+        Assert.That(result.Error.Message, Does.Contain("Database not found"));
+        Assert.That((object)result.Data, Is.Null);
     }
 
     [Test]
-    public void Request_InvalidCredentials_ThrowsErrorAsException()
+    public async Task Request_InvalidCredentials_ThrowsErrorAsException()
     {
         // Arrange
         var input = GetDefaultInput();
+        var connection = GetDefaultConnection();
         var options = GetDefaultOptions();
-        options.Password = "invalid";
-        options.ThrowExceptionOnErrorResponse = true;
+        connection.Password = "invalid";
+        options.ThrowErrorOnFailure = true;
 
         // Act
-        var exception = Assert.ThrowsAsync<Exception>(
-            async () => await Odoo.Request(input, options, CancellationToken.None));
+        var exception = await Assert.ThrowsAsync<Exception>(
+            async () => await Odoo.Request(input, connection, options, CancellationToken.None));
 
         // Assert
-        Assert.IsNotNull(exception);
-        Assert.AreEqual("Authentication failed. Odoo's response: Access Denied", exception.Message);
+        Assert.That(exception, Is.Not.Null);
+        Assert.That(exception.Message, Is.EqualTo("Authentication failed. Odoo's response: Access Denied"));
     }
 
     [Test]
@@ -72,17 +69,18 @@ internal class UnitTests
     {
         // Arrange
         var input = GetDefaultInput();
+        var connection = GetDefaultConnection();
         var options = GetDefaultOptions();
         input.Kwargs = "{ 'fields': ['name', 'email'], 'limit': 5, 'invalid': 'invalid' }";
 
         // Act
-        var result = await Odoo.Request(input, options, CancellationToken.None);
+        var result = await Odoo.Request(input, connection, options, CancellationToken.None);
 
         // Assert
-        Assert.IsFalse(result.Success);
-        Assert.IsNotNull(result.Error);
-        Assert.IsTrue(result.Error.Contains("builtins.TypeError"), result.Error);
-        Assert.IsNull(result.Data);
+        Assert.That(result.Success, Is.False);
+        Assert.That(result.Error, Is.Not.Null);
+        Assert.That(result.Error.Message, Does.Contain("builtins.TypeError"));
+        Assert.That((object)result.Data, Is.Null);
     }
 
     [Test]
@@ -90,16 +88,17 @@ internal class UnitTests
     {
         // Arrange
         var input = GetDefaultInput();
+        var connection = GetDefaultConnection();
         var options = GetDefaultOptions();
 
         // Act
-        var result = await Odoo.Request(input, options, CancellationToken.None);
+        var result = await Odoo.Request(input, connection, options, CancellationToken.None);
 
         // Assert
-        Assert.IsTrue(result.Success, result.Error);
-        Assert.IsNull(result.Error);
-        Assert.IsNotNull(result.Data);
-        Assert.AreEqual(5, result.Data.Count);
+        Assert.That(result.Success, Is.True, result.Error?.Message);
+        Assert.That(result.Error, Is.Null);
+        Assert.That((object)result.Data, Is.Not.Null);
+        Assert.That((int)result.Data.Count, Is.EqualTo(5));
     }
 
     private static Input GetDefaultInput() =>
@@ -111,13 +110,18 @@ internal class UnitTests
             Kwargs = "{ 'fields': ['name', 'email'], 'limit': 5 }",
         };
 
-    private Options GetDefaultOptions() =>
+    private static Connection GetDefaultConnection() =>
         new()
         {
-            OdooUrl = odooUrl,
-            Username = username,
-            Password = password,
-            Database = database,
-            ThrowExceptionOnErrorResponse = false,
+            OdooUrl = AssemblyInitialize.OdooUrl,
+            Username = AssemblyInitialize.Username,
+            Password = AssemblyInitialize.Password,
+            Database = AssemblyInitialize.Database,
+        };
+
+    private static Options GetDefaultOptions() =>
+        new()
+        {
+            ThrowErrorOnFailure = false,
         };
 }

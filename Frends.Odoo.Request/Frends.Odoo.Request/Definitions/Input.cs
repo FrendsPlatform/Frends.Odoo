@@ -1,7 +1,7 @@
-﻿namespace Frends.Odoo.Request.Definitions;
-
 using System.ComponentModel;
 using System.ComponentModel.DataAnnotations;
+
+namespace Frends.Odoo.Request.Definitions;
 
 /// <summary>
 /// Input class contains parameters that are required.
@@ -19,14 +19,14 @@ public class Input
     /// <summary>
     /// Method to execute in the request.
     /// </summary>
-    /// <example>res.partner</example>
+    /// <example>search_read</example>
     [DefaultValue("search_read")]
     public string Method { get; set; }
 
     /// <summary>
     /// Method arguments as JSON.
     /// </summary>
-    /// <example>[ "arg1", 1 ]</example>
+    /// <example>[[["is_company", "=", true]]]</example>
     [DisplayFormat(DataFormatString = "Json")]
     [DefaultValue("[]")]
     public string Args { get; set; }
@@ -34,7 +34,7 @@ public class Input
     /// <summary>
     /// Method keyword arguments as JSON.
     /// </summary>
-    /// <example>{ "key1": "value1", "key2": "value2" }</example>
+    /// <example>{ "fields": ["name", "email"], "limit": 5 }</example>
     [DisplayFormat(DataFormatString = "Json")]
     [DefaultValue("{}")]
     public string Kwargs { get; set; }

@@ -1,15 +1,16 @@
-﻿namespace Frends.Odoo.Request;
-
 using System;
 using System.Collections.Generic;
+using System.ComponentModel;
+using System.Linq;
 using System.Net.Http;
 using System.Text;
-using System.Threading.Tasks;
-using Newtonsoft.Json;
-using System.ComponentModel;
 using System.Threading;
-using Definitions;
-using System.Linq;
+using System.Threading.Tasks;
+using Frends.Odoo.Request.Definitions;
+using Frends.Odoo.Request.Helpers;
+using Newtonsoft.Json;
+
+namespace Frends.Odoo.Request;
 
 /// <summary>
 /// Main class of the Task.
@@ -21,35 +22,32 @@ public static class Odoo
     /// [Documentation](https://tasks.frends.com/tasks/frends-tasks/Frends.Odoo.Request).
     /// </summary>
     /// <param name="input">Task input.</param>
+    /// <param name="connection">Connection parameters.</param>
     /// <param name="options">Task options.</param>
     /// <param name="cancellationToken">Cancellation token given by Frends.</param>
-    /// <returns>Object { bool Success, string Error, dynamic Data }.</returns>
+    /// <returns>object { bool Success, dynamic Data, object Error { string Message, Exception AdditionalInfo } }.</returns>
     public static async Task<Result> Request(
         [PropertyTab] Input input,
+        [PropertyTab] Connection connection,
         [PropertyTab] Options options,
         CancellationToken cancellationToken)
     {
         try
         {
             using var httpClient = new HttpClient();
-            var session = await AuthenticateAsync(httpClient, options, cancellationToken);
-            var odooResult = await CallAsync(httpClient, session, input, options, cancellationToken);
+            var session = await AuthenticateAsync(httpClient, connection, cancellationToken);
+            var odooResult = await CallAsync(httpClient, session, input, connection, cancellationToken);
             return new Result { Success = true, Error = null, Data = odooResult };
         }
-        catch (Exception e)
+        catch (Exception exception)
         {
-            if (options.ThrowExceptionOnErrorResponse)
-            {
-                throw;
-            }
-
-            return new Result { Success = false, Error = e.Message + Environment.NewLine + e.StackTrace, Data = null };
+            return exception.Handle(options);
         }
     }
 
     private static async Task<string> AuthenticateAsync(
         HttpClient httpClient,
-        Options options,
+        Connection connection,
         CancellationToken cancellationToken)
     {
         var request = new
@@ -57,15 +55,15 @@ public static class Odoo
             jsonrpc = "2.0",
             @params = new
             {
-                db = options.Database,
-                login = options.Username,
-                password = options.Password,
+                db = connection.Database,
+                login = connection.Username,
+                password = connection.Password,
             },
         };
 
         using var content = new StringContent(JsonConvert.SerializeObject(request), Encoding.UTF8, "application/json");
         var response = await httpClient.PostAsync(
-            $"{options.OdooUrl}/web/session/authenticate", content, cancellationToken);
+            $"{connection.OdooUrl}/web/session/authenticate", content, cancellationToken);
         response.EnsureSuccessStatusCode();
 
         IEnumerable<string> cookies;
@@ -94,7 +92,11 @@ public static class Odoo
     }
 
     private static async Task<dynamic> CallAsync(
-        HttpClient httpClient, string session, Input input, Options options, CancellationToken cancellationToken)
+        HttpClient httpClient,
+        string session,
+        Input input,
+        Connection connection,
+        CancellationToken cancellationToken)
     {
         var request = new
         {
@@ -112,7 +114,8 @@ public static class Odoo
         Console.WriteLine(jsonRequest);
         using var content = new StringContent(jsonRequest, Encoding.UTF8, "application/json");
         httpClient.DefaultRequestHeaders.Add("Cookie", $"session_id={session}");
-        var response = await httpClient.PostAsync($"{options.OdooUrl}/web/dataset/call_kw", content, cancellationToken);
+        var response = await httpClient.PostAsync(
+            $"{connection.OdooUrl}/web/dataset/call_kw", content, cancellationToken);
         response.EnsureSuccessStatusCode();
 
         var responseContent = await response.Content.ReadAsStringAsync(cancellationToken);
